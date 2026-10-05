@@ -45,6 +45,15 @@ def get_args_parser():
     return p
 
 
+def describe(top: dict) -> list:
+    """Which backbone and which SAE the file is about, one line each."""
+    s = top["sae"]
+    return [f"backbone: {s['checkpoint']} @ {s['revision'][:7]} (model ID {s['model_id']}), "
+            f"{s['frames']} frames, output of block {s['layer']}",
+            f"SAE: {s['sae_class']}, {s['activation_dim']} -> {s['dict_size']:,} latents, k = {s['k']}, "
+            f"from {top['sae_dir']}"]
+
+
 def class_tied(top: dict, n: int = 20):
     """Print the latents whose (class-mean) activation is most concentrated in one class,
     among those firing on at least 5 clips."""
@@ -55,13 +64,21 @@ def class_tied(top: dict, n: int = 20):
               f"fires on {top['clip_freq'][i]:.2%} of clips")
 
 
-def text(width: int, lines: list) -> np.ndarray:
-    """Black text on a white band `width` wide, one line per entry."""
-    band = Image.new("RGB", (width, LINE * len(lines)), "white")
+def text(lines: list) -> np.ndarray:
+    """Black text on a white band as wide as its longest line, one line per entry."""
+    font = ImageFont.load_default(size=14)
+    band = Image.new("RGB", (int(max(font.getlength(line) for line in lines)) + 12, LINE * len(lines)), "white")
     draw = ImageDraw.Draw(band)
     for i, line in enumerate(lines):
-        draw.text((6, i * LINE + 3), line, fill="black", font=ImageFont.load_default(size=14))
+        draw.text((6, i * LINE + 3), line, fill="black", font=font)
     return np.asarray(band)
+
+
+def stack(parts: list) -> np.ndarray:
+    """Bands of different widths one under the other, left-aligned on white."""
+    width = max(p.shape[1] for p in parts)
+    return np.concatenate([np.pad(p, ((0, 0), (0, width - p.shape[1]), (0, 0)), constant_values=255)
+                           for p in parts], axis=0)
 
 
 @torch.no_grad()
@@ -94,16 +111,17 @@ def draw(model, sae, top: dict, latent: int) -> Image.Image:
         if i < 0:                                                    # fewer clips fired than were kept
             break
         row = strip(model, sae, top["layer"], latent, clips.load(top["keys"][i]), vmax)
-        rows += [text(row.shape[1], [f"{score:.2f}   {top['keys'][i]}"]), row]
+        rows += [text([f"{score:.2f}   {top['keys'][i]}"]), row]
     if not rows:
         raise SystemExit(f"latent {latent} fired on no clip of {top['clips']['file']}:{top['clips']['split']}")
     mean = top["class_mean"][latent]
     classes = ",  ".join(f"{top['classes'][c]} {mean[c]:.2f}" for c in mean.argsort(descending=True)[:5].tolist())
-    head = text(rows[0].shape[1], [
-        f"latent {latent}  ({top['model_id']} L{top['layer']})   fires on {top['clip_freq'][latent]:.2%} "
-        f"of {top['n_clips']:,} clips   red = where it fires",
+    head = text([
+        f"latent {latent}   fires on {top['clip_freq'][latent]:.2%} of {top['n_clips']:,} clips "
+        f"({top['clips']['file']}:{top['clips']['split']})   red = where it fires",
+        *describe(top),
         f"classes by mean activation:  {classes}"])
-    return Image.fromarray(np.concatenate([head, *rows], axis=0))
+    return Image.fromarray(stack([head, *rows]))
 
 
 def main(args):
@@ -113,6 +131,7 @@ def main(args):
     top = torch.load(path)
     if (top["model_id"], top["layer"]) != (args.model, args.layer):
         raise SystemExit(f"{path} is for {top['model_id']} L{top['layer']}, not {args.model} L{args.layer}")
+    print("\n".join(describe(top)), flush=True)
     if args.latent is None:
         class_tied(top)
         return

@@ -2,6 +2,14 @@
 
 명령 세 개면 그림이 나온다. 전부 레포 최상위 폴더(`sae_clean/`)에서 실행한다.
 
+아래 예시는 전부 `--model videomaev2-base --layer 7`로 적혀 있다. 이게 정확히 무엇인지:
+
+- **모델(백본)**: VideoMAE V2 ViT-B. Hugging Face의 `OpenGVLab/VideoMAEv2-Base` 체크포인트다. (다른 모델은 맨 아래 표)
+- **레이어**: 12개 블록 중 7번 블록의 출력 (0번부터 센다).
+- **SAE**: 그 출력으로 학습한 SAE. `--weights_dir`를 안 주면 배포용 SAE인 `weights/sae/videomaev2-base/l7`을 쓴다 (Matryoshka BatchTopK, 768 → 12,288 latent, k = 20).
+
+어떤 모델·SAE로 뽑은 결과인지는 2번, 3번 명령의 출력과 그림 맨 위에 항상 같이 적힌다.
+
 ## 1. 통계 뽑기 (모델·레이어마다 한 번만, 2~5분)
 
 ```bash
@@ -17,9 +25,11 @@ python scripts/top_activations.py --model videomaev2-base --layer 7 \
 python scripts/show_latent.py --model videomaev2-base --layer 7
 ```
 
-한 클래스에 쏠려 있는 latent 20개가 나온다. 여기서 번호를 고른다.
+맨 위 두 줄에 어떤 모델·SAE인지 나오고, 그 아래 한 클래스에 쏠려 있는 latent 20개가 나온다. 여기서 번호를 고른다.
 
 ```
+backbone: OpenGVLab/VideoMAEv2-Base @ 78c337a (model ID videomaev2-base), 16 frames, output of block 7
+SAE: MatroyshkaBatchTopKSAE, 768 -> 12,288 latents, k = 20, from weights/sae/videomaev2-base/l7
 latent  8424:  60% playing chess                  fires on 0.13% of clips
 latent 10340:  41% snorkeling                     fires on 0.43% of clips
 ```
@@ -42,7 +52,11 @@ python scripts/show_latent.py --model videomaev2-base --layer 7 --latent 10340
 
 ## 그림 읽는 법
 
-- **맨 위 두 줄**: latent 번호, 그리고 이 latent가 많이 켜지는 클래스 5개.
+- **맨 위 네 줄**:
+  1. latent 번호, 전체 클립 중 켜지는 비율, 어떤 클립 목록으로 뽑았는지
+  2. `backbone`: 모델 체크포인트와 레이어
+  3. `SAE`: SAE 종류, 크기, 가중치 폴더 (내가 학습한 SAE면 여기에 그 폴더가 나온다)
+  4. 이 latent가 많이 켜지는 클래스 5개
 - **그 아래 한 줄 = 클립 하나.** 이 latent가 가장 세게 켜지는 클립부터 8개가 나온다. 줄 위 글자는 점수와 클립 이름이다.
 - 한 줄 안에서 왼쪽 → 오른쪽이 시간 순서다.
 - **빨간 칸 = 이 latent가 켜진 위치.** 진할수록 세게 켜진 것이다.
@@ -83,6 +97,18 @@ python scripts/show_latent.py --model videomaev2-base --layer 7 --top runs/sae_s
 - 점수는 클립 안에서의 최댓값이다. 화면 한 귀퉁이에서 잠깐만 켜져도 그 클립 점수는 높다.
 - 클립이 클래스당 10개뿐이라, 몇 개 클립에서만 켜지는 latent의 `60%` 같은 숫자는 대략적인 값이다.
 - `.env`의 `K400_VAL`이 맞게 잡힌 서버에서는 1번의 `--clips ... --data_root ...`를 빼도 된다. 그러면 val 전체(19,877클립)를 돈다.
+
+## 모델 ID 표
+
+`--model`에 넣는 이름과 그 정체. 배포용 SAE는 표의 레이어마다 하나씩 `weights/sae/<모델 ID>/l<레이어>`에 있다.
+
+| `--model` | 어떤 모델인가 | 체크포인트 (Hugging Face) | `--layer` |
+|---|---|---|---|
+| `videomaev2-base` | VideoMAE V2 ViT-B. Kinetics-710으로 fine-tune한 giant 모델에서 distill한 공식 ViT-B (분류 head 없음) | `OpenGVLab/VideoMAEv2-Base` | 0–11 |
+| `vivit-b-16x2-kinetics400` | ViViT-B/16x2. Kinetics-400으로 supervised fine-tune (Google) | `google/vivit-b-16x2-kinetics400` | 0–10 |
+| `vjepa2-vitl-fpc64-256` | V-JEPA 2 ViT-L. Meta의 self-supervised 모델, encoder만 사용 | `facebook/vjepa2-vitl-fpc64-256` | 0–23 |
+| `videoprism-base-f16r288` | VideoPrism-B (16프레임, 288px). Google 공개본의 커뮤니티 PyTorch 포팅 | `sposiboh/videoprism-base-f16r288-pt` | 0–15 |
+| `siglip-so400m-patch14-384` | SigLIP SO400M/14 (384px). 이미지-텍스트 모델이라 클립의 가운데 프레임 한 장만 본다 | `google/siglip-so400m-patch14-384` | 0–26 |
 
 ## (선택) 노트북으로 보기
 

@@ -15,8 +15,9 @@ region still ranks its clip), and from those scores the script keeps, per latent
     clip_freq           (dict_size,)     the fraction of clips it fires on
 
 Writes one file, results/<model_id>/top_activations/l<layer>.pt by default, also
-holding `keys`, `labels`, `classes` and the settings. Per-patch maps are not
-stored: sae_usage.ipynb recomputes them for the few clips it shows.
+holding `keys`, `labels`, `classes` and the settings, among them which SAE it was
+(`sae`: its config.json, `sae_dir`: its folder). Per-patch maps are not stored:
+show_latent.py and sae_usage.ipynb recompute them for the few clips they show.
 
 `--weights_dir` reads the SAE from <weights_dir>/<model_id>/l<layer> instead of
 `sae.dir` in the model's config; give such a run its own `--out`.
@@ -35,7 +36,7 @@ sys.path.insert(0, str(ROOT))
 from data.clips import (ClipList, check_data_root, load_split,       # noqa: E402
                         make_frame_collate_fn, stride_subsample)
 from models import MODELS, get_model, get_spec                       # noqa: E402
-from saes import load_sae                                            # noqa: E402
+from saes import load_sae, sae_dir                                   # noqa: E402
 from utils.paths import data_root                                    # noqa: E402
 
 
@@ -103,10 +104,12 @@ def main(args):
 
     top_clip[top_val == 0] = -1
     n = int(class_n.sum())
+    where = sae_dir(args.model, args.layer, args.weights_dir).resolve()
     out = Path(args.out or ROOT / "results" / args.model / "top_activations" / f"l{args.layer}.pt")
     out.parent.mkdir(parents=True, exist_ok=True)
     torch.save({
         "model_id": args.model, "layer": args.layer, "sae": sae.config,
+        "sae_dir": str(where.relative_to(ROOT) if where.is_relative_to(ROOT) else where),
         "clips": {k: split[k] for k in ("file", "split", "sha256", "short_side")},
         "data_root": str(Path(root).resolve()), "n_clips": n,
         "keys": [s[0] for s in samples], "labels": torch.tensor([s[1] for s in samples]),
