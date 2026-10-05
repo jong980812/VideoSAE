@@ -14,3 +14,5 @@ runs/*/k400_*/
 runs/*/logs/
 runs/**/*.pt
 results/**/*.pt
+results/**/*_latent*.png
+runs/*/top/

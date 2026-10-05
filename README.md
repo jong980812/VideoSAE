@@ -41,6 +41,7 @@ scripts/                  command-line entry points, run from this folder: pytho
   train_sae.py            stage 2: one layer's shards -> one SAE
   evaluate.py             accuracy on one dataset, clean or with an SAE spliced in
   top_activations.py      per latent: its top-activating clips and its mean activation per class
+  show_latent.py          a latent's top clips as a PNG, its activation drawn over them
   train_probe.py          fit a linear-probe head on frozen features
   check_model.py          a wrapper's encode/decode against the model's own forward, every block
   train_all_layers.sh     stages 1+2 for every layer of a model, in groups
@@ -157,11 +158,18 @@ activation over a clip's patches) and its mean activation per class:
 python scripts/top_activations.py --model videomaev2-base --layer 7   # Kinetics-400 val
 ```
 
-It writes `results/<model_id>/top_activations/l<layer>.pt`; the last cells of
-`sae_usage.ipynb` read it, list the latents most tied to one class, and show a
-latent's top clips with its activation drawn over them. `--weights_dir`,
+It writes `results/<model_id>/top_activations/l<layer>.pt`. `--weights_dir`,
 `--clips`, `--split`, `--data_root` and `--limit` point it at another SAE or
-clip list.
+clip list. `scripts/show_latent.py` reads that file:
+
+```bash
+python scripts/show_latent.py --model videomaev2-base --layer 7                 # the latents most tied to one class
+python scripts/show_latent.py --model videomaev2-base --layer 7 --latent 8424   # -> l7_latent8424.png next to the file
+```
+
+The PNG shows the latent's top clips with its activation drawn over them in
+red. The last cells of `sae_usage.ipynb` do the same inline. `manual.md` walks
+through all of it.
 
 ## The weights
 
