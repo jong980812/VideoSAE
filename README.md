@@ -163,7 +163,7 @@ It writes `results/<model_id>/top_activations/l<layer>.pt`. `--weights_dir`,
 clip list. `scripts/show_latent.py` reads that file:
 
 ```bash
-python scripts/show_latent.py --model videomaev2-vitb-k710distill --layer 7                 # the latents most tied to one class
+python scripts/show_latent.py --model videomaev2-vitb-k710distill --layer 7                 # latents tied to few classes, and spread over classes
 python scripts/show_latent.py --model videomaev2-vitb-k710distill --layer 7 --latent 8424   # -> l7_latent8424.png next to the file
 ```
 

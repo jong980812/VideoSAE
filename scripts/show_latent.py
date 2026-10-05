@@ -1,14 +1,21 @@
 """Draw what an SAE latent responds to, as a PNG: its top clips with its activation over them.
 
-    python scripts/show_latent.py --model videomaev2-vitb-k710distill --layer 7                 # which latents to look at
+    python scripts/show_latent.py --model videomaev2-vitb-k710distill --layer 7                 # latents worth a look
     python scripts/show_latent.py --model videomaev2-vitb-k710distill --layer 7 --latent 8424   # -> one PNG per latent
 
 Reads what scripts/top_activations.py wrote (results/<model_id>/top_activations/l<layer>.pt,
-or `--top`). Without `--latent` it lists the latents most tied to one class. With it, it
-writes l<layer>_latent<N>.png next to that file: one row per top clip, best first, each
-row the clip's frames (one per time step of the patch grid) with RED over the patches
-where the latent fires, stronger where it fires harder. The colour scale is shared by
-the rows of one picture.
+or `--top`).
+
+Without `--latent` it lists latents worth a look, from both ends: those tied to few classes
+and those spread over classes. A latent that fires on 20 clips cannot be on 300 classes, so
+the entropy of its classes mostly says how often it fires; the list therefore compares the
+number of classes a latent is on with the number its clips would fall in by chance, and
+does so within four bands of firing frequency (rare, medium, common, dense).
+
+With `--latent` it writes l<layer>_latent<N>.png next to that file: one row per top clip,
+best first, each row the clip's frames (one per time step of the patch grid) with RED over
+the patches where the latent fires, stronger where it fires harder. The colour scale is
+shared by the rows of one picture.
 
 For an SAE read with `--weights_dir` in top_activations.py, pass the same `--weights_dir`
 here and its file as `--top`.
@@ -29,6 +36,8 @@ from models import MODELS, get_model, get_spec                       # noqa: E40
 from saes import load_sae                                            # noqa: E402
 
 LINE = 22                                                            # height of one line of text
+# Bands of firing frequency (fraction of clips), each listed on its own by list_latents().
+BANDS = (("rare", 0.0, 0.01), ("medium", 0.01, 0.1), ("common", 0.1, 0.5), ("dense", 0.5, 1.01))
 
 
 def get_args_parser():
@@ -36,7 +45,8 @@ def get_args_parser():
     p.add_argument("--model", required=True, choices=list(MODELS))
     p.add_argument("--layer", required=True, type=int)
     p.add_argument("--latent", type=int, nargs="+", default=None,
-                   help="the latents to draw; omit to list the latents most tied to one class")
+                   help="the latents to draw; omit to list the latents most tied to few "
+                        "classes and the most spread over classes")
     p.add_argument("--top", default=None, type=str,
                    help="default: results/<model_id>/top_activations/l<layer>.pt")
     p.add_argument("--weights_dir", default=None, type=str,
@@ -57,14 +67,38 @@ def describe(top: dict) -> list:
             f"from {top['sae_dir']}"]
 
 
-def class_tied(top: dict, n: int = 20):
-    """Print the latents whose (class-mean) activation is most concentrated in one class,
-    among those firing on at least 5 clips."""
-    share, cls = (top["class_mean"] / top["class_mean"].sum(1, keepdim=True).clamp(min=1e-9)).max(1)
-    share[top["clip_freq"] * top["n_clips"] < 5] = 0
-    for i in share.argsort(descending=True)[:n].tolist():
-        print(f"latent {i:>5}: {share[i]:4.0%} {top['classes'][cls[i]]:<30} "
-              f"fires on {top['clip_freq'][i]:.2%} of clips")
+def class_spread(top: dict):
+    """Per latent, on how many classes it fires and on how many it would by chance.
+
+    `classes`: the effective number of classes, exp(entropy) of its class-mean activation
+    (1 = one class only, C = all classes alike). `chance`: the number of classes its clips
+    would fall in were they drawn at random -- few for a latent that fires rarely, which is
+    why the entropy alone mostly says how often a latent fires. Their ratio is ~1 for a
+    latent indifferent to the class and small for one tied to a few.
+    """
+    mean, freq = top["class_mean"], top["clip_freq"]
+    p = mean / mean.sum(1, keepdim=True).clamp(min=1e-9)
+    classes = (-(p * p.clamp(min=1e-12).log()).sum(1)).exp()
+    per_class = torch.bincount(top["labels"], minlength=mean.shape[1]).float()
+    chance = (1 - (1 - freq[:, None]) ** per_class[None]).sum(1).clamp(min=1)
+    return classes, chance
+
+
+def list_latents(top: dict, n: int = 5):
+    """Print, per band of firing frequency, the `n` latents most tied to few classes and the
+    `n` most spread over classes (classes / chance, among latents firing on >= 10 clips)."""
+    classes, chance = class_spread(top)
+    ratio, freq = classes / chance, top["clip_freq"]
+    share, best = (top["class_mean"] / top["class_mean"].sum(1, keepdim=True).clamp(min=1e-9)).max(1)
+    for name, lo, hi in BANDS:
+        band = (freq >= lo) & (freq < hi) & (freq * top["n_clips"] >= 10)
+        print(f"\n{name}: fires on {lo:.0%}-{min(hi, 1):.0%} of clips ({int(band.sum()):,} latents)")
+        for title, order in (("tied to few classes", ratio.masked_fill(~band, 9).argsort()),
+                             ("spread over classes", ratio.masked_fill(~band, -1).argsort(descending=True))):
+            print(f"  {title}")
+            for i in order[:min(n, int(band.sum()))].tolist():
+                print(f"    latent {i:>5}: {classes[i]:5.1f} classes, {chance[i]:5.1f} by chance   "
+                      f"{freq[i]:7.2%} of clips   most on {top['classes'][best[i]]} ({share[i]:.0%})")
 
 
 def text(lines: list) -> np.ndarray:
@@ -136,7 +170,7 @@ def main(args):
         raise SystemExit(f"{path} is for {top['model_id']} L{top['layer']}, not {args.model} L{args.layer}")
     print("\n".join(describe(top)), flush=True)
     if args.latent is None:
-        class_tied(top)
+        list_latents(top)
         return
 
     model = get_model(args.model, device=args.device)

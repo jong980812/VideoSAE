@@ -25,18 +25,39 @@ python scripts/top_activations.py --model videomaev2-vitb-k710distill --layer 7 
 python scripts/show_latent.py --model videomaev2-vitb-k710distill --layer 7
 ```
 
-맨 위 네 줄에 어떤 모델·레이어·SAE인지 나오고, 그 아래 한 클래스에 쏠려 있는 latent 20개가 나온다. 여기서 번호를 고른다.
+맨 위 네 줄에 어떤 모델·레이어·SAE인지 나오고, 그 아래 볼 만한 latent 목록이 나온다. 여기서 번호를 고른다.
 
 ```
 model: VideoMAE V2 ViT-B (distilled from the giant fine-tuned on Kinetics-710, head stripped)
 checkpoint: OpenGVLab/VideoMAEv2-Base @ 78c337a   (model ID videomaev2-vitb-k710distill)
 layer: output of block 7 of 0-11, 8 x 14 x 14 patches (time x height x width)
 SAE: MatroyshkaBatchTopKSAE, 768 -> 12,288 latents, k = 20, from weights/sae/videomaev2-vitb-k710distill/l7
-latent  8424:  60% playing chess                  fires on 0.13% of clips
-latent 10340:  41% snorkeling                     fires on 0.43% of clips
+
+rare: fires on 0%-1% of clips (655 latents)
+  tied to few classes
+    latent  6632:   6.8 classes,  18.6 by chance     0.48% of clips   most on strumming guitar (39%)
+    ...
+  spread over classes
+    latent  4805:  37.3 classes,  36.4 by chance     0.95% of clips   most on vault (4%)
+    ...
 ```
 
-(`60%` = 이 latent가 켜지는 양의 60%가 그 클래스에서 나온다는 뜻)
+목록은 **양쪽 끝**을 다 보여준다.
+
+- `tied to few classes`: 몇 개 클래스에 **쏠린** latent (엔트로피 낮음)
+- `spread over classes`: 클래스와 상관없이 **퍼진** latent (엔트로피 높음)
+
+한 줄 읽는 법 (`latent 6632` 줄):
+
+- `6.8 classes`: 이 latent가 사실상 몇 개 클래스에서 켜지는가 (엔트로피로 계산한 값. 1이면 한 클래스에만, 400이면 모든 클래스에 고르게)
+- `18.6 by chance`: 이만큼 자주 켜지는 latent가 클래스와 **아무 상관 없이** 켜진다면 걸칠 클래스 수
+- 두 숫자를 비교한다. `6.8` 대 `18.6`이면 우연보다 훨씬 쏠린 것이고, `37.3` 대 `36.4`면 우연만큼 퍼진 것이다.
+- `0.48% of clips`: 전체 클립 중 켜지는 비율
+- `most on strumming guitar (39%)`: 가장 많이 켜지는 클래스와 그 비중
+
+얼마나 자주 켜지는지에 따라 네 구간으로 나눠서 보여준다: `rare`(1% 미만), `medium`(1~10%), `common`(10~50%), `dense`(50% 이상). 구간마다 쏠린 것 5개, 퍼진 것 5개가 나온다.
+
+> 왜 구간으로 나누나: 20개 클립에서만 켜지는 latent는 무슨 뜻이든 많아야 20개 클래스에만 걸칠 수 있다. 그래서 엔트로피만 보면 "드물게 켜지는 것 = 쏠린 것", "늘 켜지는 것 = 퍼진 것"이 되어 사실상 빈도 순위가 된다. 비슷한 빈도끼리, 우연과 비교해야 진짜 쏠림·퍼짐이 보인다.
 
 ## 3. 그림 만들기
 
@@ -97,9 +118,10 @@ python scripts/show_latent.py --model videomaev2-vitb-k710distill --layer 7 --to
 
 ## 알아둘 것
 
-- 목록(2번)에 없는 latent도 번호만 넣으면 그림이 나온다. 대부분의 latent는 특정 클래스와 상관없는 질감·모양·움직임이다.
+- 목록(2번)에 없는 latent도 번호만 넣으면 그림이 나온다.
+- 퍼진 latent는 내용이 아니라 **위치**에 반응하는 것일 수 있다. 예: `dense` 구간의 latent 514는 모든 영상에서 켜지는데, 그림을 보면 무엇이 찍혔든 항상 같은 자리(오른쪽 아래 구석)에서 켜진다.
 - 점수는 클립 안에서의 최댓값이다. 화면 한 귀퉁이에서 잠깐만 켜져도 그 클립 점수는 높다.
-- 클립이 클래스당 10개뿐이라, 몇 개 클립에서만 켜지는 latent의 `60%` 같은 숫자는 대략적인 값이다.
+- 클립이 클래스당 10개뿐이라, 드물게 켜지는 latent의 숫자는 대략적인 값이다. 10개 미만의 클립에서만 켜지는 latent는 목록에서 뺀다.
 - `.env`의 `K400_VAL`이 맞게 잡힌 서버에서는 1번의 `--clips ... --data_root ...`를 빼도 된다. 그러면 val 전체(19,877클립)를 돈다.
 
 ## 모델 ID 표
