@@ -1,0 +1,18 @@
+# HAT4 ActionSwap composites (7,860): the person of a Kinetics-400 val clip pasted
+# onto the inpainted background of a clip of a DIFFERENT class. A model that reads
+# the person answers the person's action (`label`); one that reads the scene
+# answers the background's (`bg_label`).
+name: hat
+
+roots:                                # the .env entries holding the data roots
+  hat: HAT4_ROOT                      # seg/<class>/<clip>/ masks, inpaint/<class>/<clip>/ scenes
+  original: K400_VAL                  # the person frames: <class>/<clip>/
+clips: datafile/hat.json
+split: val                            # pairing actionswap_rand_2
+
+loader: hat                           # builds each composite (data/hat.py)
+hat:
+  inpaint_dir: inpaint                # background scenes: <HAT4_ROOT>/inpaint/<bg key>/
+  size: 224                           # every layer: shortest edge -> 224, centre crop, then blend
+label_space: kinetics400              # scored with the model's Kinetics-400 head
+metrics: hat                          # hu_acc, bg_err, hu_acc_binary, bg_hu_ratio

@@ -1,0 +1,59 @@
+# V-JEPA 2 ViT-L (64 frames, 256 px), self-supervised by Meta: encoder only.
+model_id: vjepa2-vitl-fpc64-256
+
+backbone:
+  wrapper: vjepa2:VJepa2                      # models/vjepa2.py, class VJepa2
+  checkpoint: facebook/vjepa2-vitl-fpc64-256
+  revision: b3c1679b7c34d3255ef3547f27c7b226aefab26f
+  # Run at 16 frames, not the checkpoint's native 64 (RoPE positions allow any
+  # length): 4x fewer tokens, and NTU clips are only 17-67 frames long. It is a
+  # different representation from 64 frames. The shipped SAEs were trained on
+  # 64-frame activations and the kinetics400 probe on 64-frame features -- each
+  # config.json / the probe records its own frames.
+  frames: 16
+
+# What the loaded checkpoint must look like; get_model() refuses a mismatch.
+expect:
+  blocks: 24
+  width: 1024
+  frames: 16                                  # at 256 x 256 (see backbone.frames)
+  token_grid: [8, 16, 16]
+  cls_token: false
+
+# The SAE for block N (evaluate.py --layer N, load_sae): a folder holding ae.pt +
+# config.json, with {layer} filled in. Relative paths are relative to this repo.
+# Point it elsewhere to use other weights (e.g. train_sae.py --out_dir my_weights
+# writes my_weights/<model_id>/l<N>/).
+sae:
+  dir: weights/sae/vjepa2-vitl-fpc64-256/l{layer}
+
+# One classifier per label space; a dataset config (config/datasets/) names the
+# label space it is scored in (HAT is scored in kinetics400's).
+head:
+  kinetics400:
+    type: probe                               # linear map on the mean over final tokens; fitted
+                                              # on 64-FRAME features of datafile/kinetics400.json
+                                              # probe_train (20,000 clips), selected on
+                                              # probe_val: 50.8%
+    path: weights/heads/kinetics400/vjepa2-vitl-fpc64-256.pt
+    sha256: 67b3f275e79e683887991a99c05d15a10702fbc18741bcd028080e1ec25e86d4
+  nturgbd:
+    type: probe                               # 120 outputs; fitted on 16-frame features of
+                                              # 5,400 xsub_train clips
+    path: weights/heads/nturgbd/vjepa2-vitl-fpc64-256.pt
+    sha256: 096dc0283897ca9c6f53c81e13408840d42332cbf6d433e97be698e62f17b117
+  ssv2:
+    type: probe
+    path: weights/heads/ssv2/vjepa2-vitl-fpc64-256.pt  # not fitted yet
+    sha256: null
+
+extract:                                      # extract_activations.py defaults
+  layers: 0-23
+  batch_size: 2
+  rows_per_shard: 100000
+
+probe:                                        # train_probe.py defaults
+  batch_size: 4
+
+eval:                                         # evaluate.py defaults
+  batch_size: 1                               # as for the reference numbers (see README)

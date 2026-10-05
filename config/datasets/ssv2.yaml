@@ -1,0 +1,10 @@
+# Something-Something v2, official validation set (24,777 clips, 174 classes).
+name: ssv2
+
+root: SSV2_ROOT                       # the .env entry holding the data root
+clips: datafile/ssv2.json
+split: validation                     # train (168,913) is there too, for fitting heads
+
+loader: clips                         # one clip per item: <root>/<key>, frames or video
+label_space: ssv2                     # which head in the model config scores it
+metrics: classification               # top-1 / top-5

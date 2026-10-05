@@ -1,0 +1,22 @@
+# Pinned to the environment every shipped SAE was trained and verified in
+# (Python 3.10). transformers is pinned exactly: ViViT's frame count and image
+# size come from its config defaults, and V-JEPA 2 needs >= 4.53.
+torch==2.7.1                 # >= 2.6 needed: ViViT ships a .bin checkpoint; the VideoPrism port needs flex_attention
+torchvision==0.22.1          # V-JEPA 2's video processor
+transformers==4.56.1
+huggingface-hub==0.34.3
+timm==1.0.15                 # VideoMAE V2 remote code
+easydict==1.13               # VideoMAE V2 remote code
+numpy==1.26.4
+einops==0.8.0
+pillow==10.3.0
+tqdm==4.66.5
+pyyaml==6.0.2                # config/<model_id>.yaml
+sentencepiece==0.2.0         # SigLIP's tokenizer, for its zero-shot head
+
+# Video decoding, only for .mp4 clips (decord first, PyAV as the fallback)
+decord==0.6.0
+av==12.3.0
+
+# Optional: only with train_sae.py --wandb
+# wandb==0.22.0

@@ -1,0 +1,13 @@
+# NTU RGB+D, official NTU-60 cross-subject test set (16,200 clips).
+name: nturgbd
+
+root: NTU_ROOT                        # the .env entry holding the data root
+clips: datafile/nturgbd.json
+split: xsub_val                       # xsub_train (36,000) is there too, for fitting heads
+
+loader: clips                         # one clip per item: <root>/<key>, frames or video
+label_space: nturgbd                  # which head in the model config scores it
+metrics: classification               # top-1 / top-5
+# The heads have all 120 NTU-120 outputs, but only A001-A060 are on disk, so the
+# answer is restricted to those 60 (the file's `score_classes`): chance is 1/60.
+restrict_to_score_classes: true

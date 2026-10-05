@@ -1,0 +1,51 @@
+# VideoPrism-B (16 frames, 288 px), community PyTorch port of Google's JAX release.
+model_id: videoprism-base-f16r288
+
+backbone:
+  wrapper: videoprism:VideoPrism              # models/videoprism.py, class VideoPrism
+  checkpoint: sposiboh/videoprism-base-f16r288-pt
+  revision: 82d97c3e1c42b1e960801857541892fb4d7e9aff
+
+# What the loaded checkpoint must look like; get_model() refuses a mismatch.
+expect:
+  blocks: 16                                  # 12 spatial, then 4 temporal
+  width: 768
+  frames: 16                                  # at 288 x 288
+  token_grid: [16, 16, 16]
+  cls_token: false
+
+# The SAE for block N (evaluate.py --layer N, load_sae): a folder holding ae.pt +
+# config.json, with {layer} filled in. Relative paths are relative to this repo.
+# Point it elsewhere to use other weights (e.g. train_sae.py --out_dir my_weights
+# writes my_weights/<model_id>/l<N>/).
+sae:
+  dir: weights/sae/videoprism-base-f16r288/l{layer}
+
+# One classifier per label space; a dataset config (config/datasets/) names the
+# label space it is scored in (HAT is scored in kinetics400's).
+head:
+  kinetics400:
+    type: probe                               # linear map on the mean over final tokens; fitted
+                                              # on datafile/kinetics400.json probe_train (20,000
+                                              # clips), selected on probe_val: 66.5%
+    path: weights/heads/kinetics400/videoprism-base-f16r288.pt
+    sha256: 81c9d90e6a9e27de489d3620fb888388d709e450953b7d31d247dfcaeda99674
+  nturgbd:
+    type: probe                               # 120 outputs; fitted on 5,400 xsub_train clips
+    path: weights/heads/nturgbd/videoprism-base-f16r288.pt
+    sha256: e374bb4999f0abb9ee5ef191a6dd8614df263043f9841f1ee6286db30db84ca1
+  ssv2:
+    type: probe
+    path: weights/heads/ssv2/videoprism-base-f16r288.pt   # not fitted yet
+    sha256: null
+
+extract:                                      # extract_activations.py defaults
+  layers: 0-15
+  batch_size: 8
+  rows_per_shard: 200000
+
+probe:                                        # train_probe.py defaults
+  batch_size: 8
+
+eval:                                         # evaluate.py defaults
+  batch_size: 2                               # as for the reference numbers (see README)

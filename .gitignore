@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.vscode/
+
+# model / SAE weights
+/weights/
+
+# experiment outputs (scripts, clip lists and results under runs/ are tracked)
+runs/*/acts*/
+runs/*/weights/
+runs/*/k400_*/
+runs/*/logs/
+runs/**/*.pt

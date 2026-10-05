@@ -1,0 +1,49 @@
+# SigLIP SO400M/14 at 384 px: an image-text model, used on each clip's middle frame.
+model_id: siglip-so400m-patch14-384
+
+backbone:
+  wrapper: siglip:Siglip                      # models/siglip.py, class Siglip
+  checkpoint: google/siglip-so400m-patch14-384
+  revision: 9fdffc58afc957d1a03a25b10dba0329ab15c2a3
+
+# What the loaded checkpoint must look like; get_model() refuses a mismatch.
+expect:
+  blocks: 27
+  width: 1152
+  frames: 3                                   # 3 read, the middle one used, at 384 x 384
+  token_grid: [1, 27, 27]
+  cls_token: false
+
+# The SAE for block N (evaluate.py --layer N, load_sae): a folder holding ae.pt +
+# config.json, with {layer} filled in. Relative paths are relative to this repo.
+# Point it elsewhere to use other weights (e.g. train_sae.py --out_dir my_weights
+# writes my_weights/<model_id>/l<N>/).
+sae:
+  dir: weights/sae/siglip-so400m-patch14-384/l{layer}
+
+# One classifier per label space; a dataset config (config/datasets/) names the
+# label space it is scored in (HAT is scored in kinetics400's).
+head:
+  kinetics400:
+    type: zeroshot                            # the text tower encodes one prompt per class;
+                                              # logits = cos(image, text) * scale + bias
+    prompt: "a photo of a person {}."         # {} is the class name, e.g. "air drumming"
+  nturgbd:
+    type: probe
+    path: weights/heads/nturgbd/siglip-so400m-patch14-384.pt   # not fitted yet
+    sha256: null
+  ssv2:
+    type: probe
+    path: weights/heads/ssv2/siglip-so400m-patch14-384.pt      # not fitted yet
+    sha256: null
+
+extract:                                      # extract_activations.py defaults
+  layers: 0-26
+  batch_size: 8
+  rows_per_shard: 100000
+
+probe:                                        # train_probe.py defaults
+  batch_size: 8
+
+eval:                                         # evaluate.py defaults
+  batch_size: 8                               # as for the reference numbers (see README)

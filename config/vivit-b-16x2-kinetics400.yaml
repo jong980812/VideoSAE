@@ -1,0 +1,48 @@
+# ViViT-B/16x2, fine-tuned on Kinetics-400 by Google (supervised).
+model_id: vivit-b-16x2-kinetics400
+
+backbone:
+  wrapper: vivit:Vivit                        # models/vivit.py, class Vivit
+  checkpoint: google/vivit-b-16x2-kinetics400
+  revision: 8a7171a57f79b9aaa58bc8d977c002a0ea0f0d42
+
+# What the loaded checkpoint must look like; get_model() refuses a mismatch.
+expect:
+  blocks: 12
+  width: 768
+  frames: 32                                  # at 224 x 224
+  token_grid: [16, 14, 14]                    # plus one CLS token
+  cls_token: true
+
+# The SAE for block N (evaluate.py --layer N, load_sae): a folder holding ae.pt +
+# config.json, with {layer} filled in. Relative paths are relative to this repo.
+# Point it elsewhere to use other weights (e.g. train_sae.py --out_dir my_weights
+# writes my_weights/<model_id>/l<N>/).
+sae:
+  dir: weights/sae/vivit-b-16x2-kinetics400/l{layer}
+
+# One classifier per label space; a dataset config (config/datasets/) names the
+# label space it is scored in (HAT is scored in kinetics400's).
+head:
+  kinetics400:
+    type: native                              # the checkpoint's own classifier, on the CLS token;
+                                              # its 400 outputs are the sorted class names
+  nturgbd:
+    type: probe                               # linear map on the CLS feature, 120 outputs
+    path: weights/heads/nturgbd/vivit-b-16x2-kinetics400.pt   # fitted on 5,400 xsub_train clips
+    sha256: f514923c90c59f8942d4c3ee72a377ae9cd96fcb7b3cee1be122f63d3cad0635
+  ssv2:
+    type: probe
+    path: weights/heads/ssv2/vivit-b-16x2-kinetics400.pt      # not fitted yet
+    sha256: null
+
+extract:                                      # extract_activations.py defaults
+  layers: 0-10                                # no SAE for block 11: see models/vivit.py
+  batch_size: 4
+  rows_per_shard: 200000
+
+probe:                                        # train_probe.py defaults
+  batch_size: 8
+
+eval:                                         # evaluate.py defaults
+  batch_size: 2                               # as for the reference numbers (see README)

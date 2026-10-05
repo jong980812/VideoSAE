@@ -1,0 +1,10 @@
+# Kinetics-400 val: every clip (19,877).
+name: kinetics400
+
+root: K400_VAL                        # the .env entry holding the data root
+clips: datafile/kinetics400.json      # clip lists (format: datafile/README.md)
+split: val                            # also there: train_sae, probe_train, probe_val
+
+loader: clips                         # one clip per item: <root>/<key>, frames or video
+label_space: kinetics400              # which head in the model config scores it
+metrics: classification               # top-1 / top-5
