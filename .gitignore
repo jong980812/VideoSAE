@@ -13,3 +13,4 @@ runs/*/weights/
 runs/*/k400_*/
 runs/*/logs/
 runs/**/*.pt
+results/**/*.pt

@@ -40,6 +40,7 @@ scripts/                  command-line entry points, run from this folder: pytho
   extract_activations.py  stage 1: clips -> per-layer activation shards
   train_sae.py            stage 2: one layer's shards -> one SAE
   evaluate.py             accuracy on one dataset, clean or with an SAE spliced in
+  top_activations.py      per latent: its top-activating clips and its mean activation per class
   train_probe.py          fit a linear-probe head on frozen features
   check_model.py          a wrapper's encode/decode against the model's own forward, every block
   train_all_layers.sh     stages 1+2 for every layer of a model, in groups
@@ -147,6 +148,20 @@ extends it, and so on (1/16, 1/8, 1/4, 9/16 of the dictionary).
 **VideoPrism layer order.** VideoPrism's blocks 0–11 output each frame's 256
 patches, and blocks 12–15 each position's 16 timesteps. `encode(..., layer=L)`
 returns both in the same frame-major (T, H, W) order.
+
+**What a latent responds to.** `scripts/top_activations.py` goes over a clip
+list once and keeps, per latent, its top-activating clips (by the latent's max
+activation over a clip's patches) and its mean activation per class:
+
+```bash
+python scripts/top_activations.py --model videomaev2-base --layer 7   # Kinetics-400 val
+```
+
+It writes `results/<model_id>/top_activations/l<layer>.pt`; the last cells of
+`sae_usage.ipynb` read it, list the latents most tied to one class, and show a
+latent's top clips with its activation drawn over them. `--weights_dir`,
+`--clips`, `--split`, `--data_root` and `--limit` point it at another SAE or
+clip list.
 
 ## The weights
 
