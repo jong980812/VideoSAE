@@ -1,5 +1,6 @@
 # VideoPrism-B (16 frames, 288 px), community PyTorch port of Google's JAX release.
 model_id: videoprism-base-f16r288
+name: "VideoPrism-B, 16 frames at 288 px (community PyTorch port of Google's JAX release)"
 
 backbone:
   wrapper: videoprism:VideoPrism              # models/videoprism.py, class VideoPrism

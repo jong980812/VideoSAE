@@ -1,5 +1,6 @@
 # V-JEPA 2 ViT-L (64 frames, 256 px), self-supervised by Meta: encoder only.
 model_id: vjepa2-vitl-fpc64-256
+name: "V-JEPA 2 ViT-L, 64 frames at 256 px (self-supervised by Meta, encoder only)"
 
 backbone:
   wrapper: vjepa2:VJepa2                      # models/vjepa2.py, class VJepa2

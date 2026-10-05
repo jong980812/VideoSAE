@@ -3,7 +3,7 @@
     from models import get_model
     model = get_model("videomaev2-base", device="cuda:0")
 
-`config/<model_id>.yaml` holds everything about a model: the wrapper class, the
+`config/<model_id>.yaml` holds everything about a model: its name, the wrapper class, the
 Hugging Face checkpoint and pinned revision (and, optionally, the clip length to
 run at), the shape the loaded model must have (`expect:`, checked on every load),
 where its SAEs are, one classification head per label space (kinetics400,
@@ -55,6 +55,11 @@ class ModelSpec:
         if raw.get("model_id") != path.stem:
             raise ValueError(f"{path}: model_id {raw.get('model_id')!r} != file name {path.stem!r}")
         return cls(model_id=raw["model_id"], raw=raw)
+
+    @property
+    def name(self) -> str:
+        """What the model is, in words (the model ID is only a key)."""
+        return self.raw["name"]
 
     # backbone
     @property

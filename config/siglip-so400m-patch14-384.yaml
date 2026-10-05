@@ -1,5 +1,6 @@
 # SigLIP SO400M/14 at 384 px: an image-text model, used on each clip's middle frame.
 model_id: siglip-so400m-patch14-384
+name: "SigLIP SO400M/14 at 384 px (image-text model, run on each clip's middle frame)"
 
 backbone:
   wrapper: siglip:Siglip                      # models/siglip.py, class Siglip

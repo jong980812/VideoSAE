@@ -25,7 +25,7 @@ from PIL import Image, ImageDraw, ImageFont
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from data.clips import ClipList                                      # noqa: E402
-from models import MODELS, get_model                                 # noqa: E402
+from models import MODELS, get_model, get_spec                       # noqa: E402
 from saes import load_sae                                            # noqa: E402
 
 LINE = 22                                                            # height of one line of text
@@ -46,11 +46,13 @@ def get_args_parser():
 
 
 def describe(top: dict) -> list:
-    """Which backbone and which SAE the file is about, one line each."""
-    s = top["sae"]
+    """Which model, which of its layers and which SAE the file is about, one line each."""
+    s, spec = top["sae"], get_spec(top["model_id"])
     grid = " x ".join(str(n) for n in s["token_grid"])
-    return [f"backbone: {s['checkpoint']} @ {s['revision'][:7]} (model ID {s['model_id']}), "
-            f"output of block {s['layer']}, {grid} patches (time x height x width)",
+    return [f"model: {spec.name}",
+            f"checkpoint: {s['checkpoint']} @ {s['revision'][:7]}   (model ID {s['model_id']})",
+            f"layer: output of block {s['layer']} of 0-{spec.expect['blocks'] - 1}, "
+            f"{grid} patches (time x height x width)",
             f"SAE: {s['sae_class']}, {s['activation_dim']} -> {s['dict_size']:,} latents, k = {s['k']}, "
             f"from {top['sae_dir']}"]
 

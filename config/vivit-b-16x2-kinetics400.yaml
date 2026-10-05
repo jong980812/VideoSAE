@@ -1,5 +1,6 @@
 # ViViT-B/16x2, fine-tuned on Kinetics-400 by Google (supervised).
 model_id: vivit-b-16x2-kinetics400
+name: "ViViT-B/16x2 (fine-tuned on Kinetics-400, supervised)"
 
 backbone:
   wrapper: vivit:Vivit                        # models/vivit.py, class Vivit

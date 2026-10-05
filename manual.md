@@ -4,7 +4,7 @@
 
 아래 예시는 전부 `--model videomaev2-base --layer 7`로 적혀 있다. 이게 정확히 무엇인지:
 
-- **모델(백본)**: VideoMAE V2 ViT-B. Hugging Face의 `OpenGVLab/VideoMAEv2-Base` 체크포인트다. (다른 모델은 맨 아래 표)
+- **모델**: `videomaev2-base`는 이 레포에서 붙인 줄임 이름(모델 ID)이고, 정식 이름은 **VideoMAE V2 ViT-B**다. 영상을 넣으면 특징을 내는 Vision Transformer(Base 크기, 블록 12개)로, Kinetics-710으로 fine-tune한 giant 모델에서 distill한 공식 체크포인트 `OpenGVLab/VideoMAEv2-Base`(Hugging Face)를 쓴다. 분류 head는 없다. 입력은 16프레임, 224×224. (다른 모델은 맨 아래 표)
 - **레이어**: 12개 블록 중 7번 블록의 출력 (0번부터 센다).
 - **SAE**: 그 출력으로 학습한 SAE. `--weights_dir`를 안 주면 배포용 SAE인 `weights/sae/videomaev2-base/l7`을 쓴다 (Matryoshka BatchTopK, 768 → 12,288 latent, k = 20).
 
@@ -25,10 +25,12 @@ python scripts/top_activations.py --model videomaev2-base --layer 7 \
 python scripts/show_latent.py --model videomaev2-base --layer 7
 ```
 
-맨 위 두 줄에 어떤 모델·SAE인지 나오고, 그 아래 한 클래스에 쏠려 있는 latent 20개가 나온다. 여기서 번호를 고른다.
+맨 위 네 줄에 어떤 모델·레이어·SAE인지 나오고, 그 아래 한 클래스에 쏠려 있는 latent 20개가 나온다. 여기서 번호를 고른다.
 
 ```
-backbone: OpenGVLab/VideoMAEv2-Base @ 78c337a (model ID videomaev2-base), output of block 7, 8 x 14 x 14 patches (time x height x width)
+model: VideoMAE V2 ViT-B (distilled from the giant fine-tuned on Kinetics-710, head stripped)
+checkpoint: OpenGVLab/VideoMAEv2-Base @ 78c337a   (model ID videomaev2-base)
+layer: output of block 7 of 0-11, 8 x 14 x 14 patches (time x height x width)
 SAE: MatroyshkaBatchTopKSAE, 768 -> 12,288 latents, k = 20, from weights/sae/videomaev2-base/l7
 latent  8424:  60% playing chess                  fires on 0.13% of clips
 latent 10340:  41% snorkeling                     fires on 0.43% of clips
@@ -52,11 +54,13 @@ python scripts/show_latent.py --model videomaev2-base --layer 7 --latent 10340
 
 ## 그림 읽는 법
 
-- **맨 위 네 줄**:
+- **맨 위 여섯 줄**:
   1. latent 번호, 전체 클립 중 켜지는 비율, 어떤 클립 목록으로 뽑았는지
-  2. `backbone`: 모델 체크포인트, 레이어, 패치 격자 (시간 × 세로 × 가로. 그림 한 줄의 프레임 수가 이 시간 칸 수다)
-  3. `SAE`: SAE 종류, 크기, 가중치 폴더 (내가 학습한 SAE면 여기에 그 폴더가 나온다)
-  4. 이 latent가 많이 켜지는 클래스 5개
+  2. `model`: 모델의 정식 이름
+  3. `checkpoint`: Hugging Face 체크포인트와 리비전, 이 레포의 모델 ID
+  4. `layer`: 몇 번 블록의 출력인지, 패치 격자 (시간 × 세로 × 가로. 그림 한 줄의 프레임 수가 이 시간 칸 수다)
+  5. `SAE`: SAE 종류, 크기, 가중치 폴더 (내가 학습한 SAE면 여기에 그 폴더가 나온다)
+  6. 이 latent가 많이 켜지는 클래스 5개
 - **그 아래 한 줄 = 클립 하나.** 이 latent가 가장 세게 켜지는 클립부터 8개가 나온다. 줄 위 글자는 점수와 클립 이름이다.
 - 한 줄 안에서 왼쪽 → 오른쪽이 시간 순서다.
 - **빨간 칸 = 이 latent가 켜진 위치.** 진할수록 세게 켜진 것이다.

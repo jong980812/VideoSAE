@@ -1,6 +1,7 @@
 # VideoMAE V2 ViT-B: the official ViT-B distilled from a giant fine-tuned on
 # Kinetics-710 (head stripped) -- see models/videomaev2.py.
 model_id: videomaev2-base
+name: "VideoMAE V2 ViT-B (distilled from the giant fine-tuned on Kinetics-710, head stripped)"
 
 backbone:
   wrapper: videomaev2:VideoMAEv2              # models/videomaev2.py, class VideoMAEv2
