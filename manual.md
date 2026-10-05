@@ -28,7 +28,7 @@ python scripts/show_latent.py --model videomaev2-base --layer 7
 맨 위 두 줄에 어떤 모델·SAE인지 나오고, 그 아래 한 클래스에 쏠려 있는 latent 20개가 나온다. 여기서 번호를 고른다.
 
 ```
-backbone: OpenGVLab/VideoMAEv2-Base @ 78c337a (model ID videomaev2-base), 16 frames, output of block 7
+backbone: OpenGVLab/VideoMAEv2-Base @ 78c337a (model ID videomaev2-base), output of block 7, 8 x 14 x 14 patches (time x height x width)
 SAE: MatroyshkaBatchTopKSAE, 768 -> 12,288 latents, k = 20, from weights/sae/videomaev2-base/l7
 latent  8424:  60% playing chess                  fires on 0.13% of clips
 latent 10340:  41% snorkeling                     fires on 0.43% of clips
@@ -54,7 +54,7 @@ python scripts/show_latent.py --model videomaev2-base --layer 7 --latent 10340
 
 - **맨 위 네 줄**:
   1. latent 번호, 전체 클립 중 켜지는 비율, 어떤 클립 목록으로 뽑았는지
-  2. `backbone`: 모델 체크포인트와 레이어
+  2. `backbone`: 모델 체크포인트, 레이어, 패치 격자 (시간 × 세로 × 가로. 그림 한 줄의 프레임 수가 이 시간 칸 수다)
   3. `SAE`: SAE 종류, 크기, 가중치 폴더 (내가 학습한 SAE면 여기에 그 폴더가 나온다)
   4. 이 latent가 많이 켜지는 클래스 5개
 - **그 아래 한 줄 = 클립 하나.** 이 latent가 가장 세게 켜지는 클립부터 8개가 나온다. 줄 위 글자는 점수와 클립 이름이다.

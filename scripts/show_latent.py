@@ -48,8 +48,9 @@ def get_args_parser():
 def describe(top: dict) -> list:
     """Which backbone and which SAE the file is about, one line each."""
     s = top["sae"]
+    grid = " x ".join(str(n) for n in s["token_grid"])
     return [f"backbone: {s['checkpoint']} @ {s['revision'][:7]} (model ID {s['model_id']}), "
-            f"{s['frames']} frames, output of block {s['layer']}",
+            f"output of block {s['layer']}, {grid} patches (time x height x width)",
             f"SAE: {s['sae_class']}, {s['activation_dim']} -> {s['dict_size']:,} latents, k = {s['k']}, "
             f"from {top['sae_dir']}"]
 
