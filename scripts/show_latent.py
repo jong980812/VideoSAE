@@ -58,13 +58,15 @@ def get_args_parser():
 def describe(top: dict) -> list:
     """Which model, which of its layers and which SAE the file is about, one line each."""
     s, spec = top["sae"], get_spec(top["model_id"])
-    grid = " x ".join(str(n) for n in s["token_grid"])
+    grid = " x ".join(str(n) for n in spec.expect["token_grid"])      # the grid the model runs at here
+    fitted = "" if s["frames"] == spec.expect["frames"] else \
+        f"   (fitted on {s['frames']}-frame activations; the model runs at {spec.expect['frames']} frames here)"
     return [f"model: {spec.name}",
             f"checkpoint: {s['checkpoint']} @ {s['revision'][:7]}   (model ID {s['model_id']})",
             f"layer: output of block {s['layer']} of 0-{spec.expect['blocks'] - 1}, "
             f"{grid} patches (time x height x width)",
             f"SAE: {s['sae_class']}, {s['activation_dim']} -> {s['dict_size']:,} latents, k = {s['k']}, "
-            f"from {top['sae_dir']}"]
+            f"from {top['sae_dir']}{fitted}"]
 
 
 def class_spread(top: dict):
