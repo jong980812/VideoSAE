@@ -1,7 +1,7 @@
 """What each SAE latent responds to: its top-activating clips and its classes.
 
-    python scripts/top_activations.py --model videomaev2-base --layer 7
-    python scripts/top_activations.py --model videomaev2-base --layer 7 \\
+    python scripts/top_activations.py --model videomaev2-vitb-k710distill --layer 7
+    python scripts/top_activations.py --model videomaev2-vitb-k710distill --layer 7 \\
         --weights_dir runs/sae_sweep/weights/btk --out runs/sae_sweep/top/btk.pt \\
         --clips runs/sae_sweep/clips.json --split val4k --data_root runs/sae_sweep/k400_val
 

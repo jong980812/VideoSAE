@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Matryoshka BatchTopK vs plain BatchTopK on the same layer-7 activations, three
 # unseeded runs each (one GPU per run), every other setting the shipped recipe.
-# Each run is scored on the held-out activations -> <run>/videomaev2-base/l7/metrics.json
+# Each run is scored on the held-out activations -> <run>/videomaev2-vitb-k710distill/l7/metrics.json
 #   bash runs/mat_vs_btk/train.sh
 set -uo pipefail
 cd "$(dirname "$0")/../.."

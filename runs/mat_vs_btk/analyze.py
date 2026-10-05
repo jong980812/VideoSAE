@@ -25,7 +25,7 @@ sys.path.insert(0, str(ROOT))
 from data.activations import ActivationsDataset   # noqa: E402
 from saes import load_sae                         # noqa: E402
 
-MODEL, LAYER, DEVICE = "videomaev2-base", 7, "cuda:0"
+MODEL, LAYER, DEVICE = "videomaev2-vitb-k710distill", 7, "cuda:0"
 PREFIXES = (1 / 16, 3 / 16, 7 / 16)
 
 

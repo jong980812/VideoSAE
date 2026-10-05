@@ -13,7 +13,7 @@ Everything is keyed by a **model ID**. Each ID names exactly one checkpoint, and
 | Model ID | Checkpoint (pinned revision) | Blocks | Layers with SAEs | Width → dictionary | Input | Patch-token grid (T′×H′×W′) |
 |---|---|---|---|---|---|---|
 | `vivit-b-16x2-kinetics400` | `google/vivit-b-16x2-kinetics400` @ `8a7171a` | 12 | 0–10 | 768 → 12,288 | 32 frames, 224² | 16×14×14 (+ CLS, never seen by the SAEs) |
-| `videomaev2-base` | `OpenGVLab/VideoMAEv2-Base` @ `78c337a` | 12 | 0–11 | 768 → 12,288 | 16 frames, 224² | 8×14×14 |
+| `videomaev2-vitb-k710distill` | `OpenGVLab/VideoMAEv2-Base` @ `78c337a` | 12 | 0–11 | 768 → 12,288 | 16 frames, 224² | 8×14×14 |
 | `siglip-so400m-patch14-384` | `google/siglip-so400m-patch14-384` @ `9fdffc5` | 27 | 0–26 | 1152 → 18,432 | middle frame, 384² | 1×27×27 |
 | `videoprism-base-f16r288` | `sposiboh/videoprism-base-f16r288-pt` @ `82d97c3` | 16 (12 spatial + 4 temporal) | 0–15 | 768 → 12,288 | 16 frames, 288² | 16×16×16 |
 | `vjepa2-vitl-fpc64-256` | `facebook/vjepa2-vitl-fpc64-256` @ `b3c1679` | 24 | 0–23 | 1024 → 16,384 | 16 frames, 256² (native 64) | 8×16×16 |
@@ -155,7 +155,7 @@ list once and keeps, per latent, its top-activating clips (by the latent's max
 activation over a clip's patches) and its mean activation per class:
 
 ```bash
-python scripts/top_activations.py --model videomaev2-base --layer 7   # Kinetics-400 val
+python scripts/top_activations.py --model videomaev2-vitb-k710distill --layer 7   # Kinetics-400 val
 ```
 
 It writes `results/<model_id>/top_activations/l<layer>.pt`. `--weights_dir`,
@@ -163,8 +163,8 @@ It writes `results/<model_id>/top_activations/l<layer>.pt`. `--weights_dir`,
 clip list. `scripts/show_latent.py` reads that file:
 
 ```bash
-python scripts/show_latent.py --model videomaev2-base --layer 7                 # the latents most tied to one class
-python scripts/show_latent.py --model videomaev2-base --layer 7 --latent 8424   # -> l7_latent8424.png next to the file
+python scripts/show_latent.py --model videomaev2-vitb-k710distill --layer 7                 # the latents most tied to one class
+python scripts/show_latent.py --model videomaev2-vitb-k710distill --layer 7 --latent 8424   # -> l7_latent8424.png next to the file
 ```
 
 The PNG shows the latent's top clips with its activation drawn over them in
@@ -270,13 +270,13 @@ trained, and `extract_activations.py` records each substitution in `meta.json`.
 
 ```bash
 # stage 1: activations for some layers (default: every layer that has an SAE); clips from K400_TRAIN
-python scripts/extract_activations.py --model videomaev2-base --out_dir acts/videomaev2-base --layers 6,7,8,9
+python scripts/extract_activations.py --model videomaev2-vitb-k710distill --out_dir acts/videomaev2-vitb-k710distill --layers 6,7,8,9
 
-# stage 2: one SAE per layer -> my_weights/videomaev2-base/l9/{ae.pt,config.json}
-python scripts/train_sae.py --activations_dir acts/videomaev2-base/l9 --out_dir my_weights
+# stage 2: one SAE per layer -> my_weights/videomaev2-vitb-k710distill/l9/{ae.pt,config.json}
+python scripts/train_sae.py --activations_dir acts/videomaev2-vitb-k710distill/l9 --out_dir my_weights
 
 # or both, for every layer, in groups of 6, deleting activations as it goes
-bash scripts/train_all_layers.sh videomaev2-base /scratch/sae 6
+bash scripts/train_all_layers.sh videomaev2-vitb-k710distill /scratch/sae 6
 ```
 
 - **Defaults.** Every extraction default (layers, batch size, shard size) comes
@@ -301,7 +301,7 @@ bash scripts/train_all_layers.sh videomaev2-base /scratch/sae 6
 
 A retrained SAE will not be bit-identical to a shipped one: training is unseeded
 and GPU-nondeterministic. Four of the five shipped models (all but
-`videomaev2-base`) also drew their 256 token positions per clip from one
+`videomaev2-vitb-k710distill`) also drew their 256 token positions per clip from one
 sequential random stream rather than the per-clip seeding used here. That gives
 the same distribution of positions but different rows.
 
@@ -432,7 +432,7 @@ yet**; evaluating that combination stops with a message. Which heads exist:
 | Model ID | kinetics400 (also HAT) | nturgbd | ssv2 |
 |---|---|---|---|
 | `vivit-b-16x2-kinetics400` | native | probe | — |
-| `videomaev2-base` | probe | — | — |
+| `videomaev2-vitb-k710distill` | probe | — | — |
 | `siglip-so400m-patch14-384` | zero-shot | — | — |
 | `videoprism-base-f16r288` | probe | probe | — |
 | `vjepa2-vitl-fpc64-256` | probe (fitted at 64 frames) | probe (16 frames) | — |
@@ -446,7 +446,7 @@ yet**; evaluating that combination stops with a message. Which heads exist:
 `train_probe.py` fits Kinetics-400 probes:
 
 ```bash
-python scripts/train_probe.py --model videomaev2-base      # clips from K400_TRAIN and K400_VAL in .env
+python scripts/train_probe.py --model videomaev2-vitb-k710distill      # clips from K400_TRAIN and K400_VAL in .env
 ```
 
 This writes `weights/heads/kinetics400/<model_id>.pt`. Point the config's
@@ -524,12 +524,18 @@ The existing wrappers are short worked examples.
   - The SAEs cover patch tokens of blocks 0–10.
   - Block 11 has no SAE: its patch outputs never reach the checkpoint's
     classifier, which reads only the CLS token, so none was trained there.
-- **VideoMAE V2 (`videomaev2-base`).**
+- **VideoMAE V2 (`videomaev2-vitb-k710distill`).**
   - The Hub model card calls these weights self-supervised, but they are the
     official ViT-B distilled from a giant model fine-tuned on Kinetics-710:
     the weights carry a trained `fc_norm` and nothing of an MAE decoder. So the
     features have seen Kinetics labels.
   - Clip length is fixed at 16 by the positional table.
+  - This model ID used to be `videomaev2-base`. Weights from a checkout of that
+    time need three renames to load here: the folder
+    `weights/sae/videomaev2-base/` (and `<weights_dir>/videomaev2-base/` of your
+    own runs), `"model_id"` in each `config.json` and activation `meta*.json`,
+    and the head file `weights/heads/kinetics400/videomaev2-base.pt` (rename
+    only: its bytes, and so its sha256, stay as they are).
 - **SigLIP.**
   - This is an image model: the wrapper reads 3 frames and keeps the middle one.
   - The processor squashes the frame to 384² with no crop.

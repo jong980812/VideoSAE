@@ -2,18 +2,18 @@
 
 명령 세 개면 그림이 나온다. 전부 레포 최상위 폴더(`sae_clean/`)에서 실행한다.
 
-아래 예시는 전부 `--model videomaev2-base --layer 7`로 적혀 있다. 이게 정확히 무엇인지:
+아래 예시는 전부 `--model videomaev2-vitb-k710distill --layer 7`로 적혀 있다. 이게 정확히 무엇인지:
 
-- **모델**: `videomaev2-base`는 이 레포에서 붙인 줄임 이름(모델 ID)이고, 정식 이름은 **VideoMAE V2 ViT-B**다. 영상을 넣으면 특징을 내는 Vision Transformer(Base 크기, 블록 12개)로, Kinetics-710으로 fine-tune한 giant 모델에서 distill한 공식 체크포인트 `OpenGVLab/VideoMAEv2-Base`(Hugging Face)를 쓴다. 분류 head는 없다. 입력은 16프레임, 224×224. (다른 모델은 맨 아래 표)
+- **모델**: `videomaev2-vitb-k710distill`은 이 레포에서 붙인 이름(모델 ID)이고, 정식 이름은 **VideoMAE V2 ViT-B**다. 영상을 넣으면 특징을 내는 Vision Transformer(Base 크기, 블록 12개)로, Kinetics-710으로 fine-tune한 giant 모델에서 distill한 공식 체크포인트 `OpenGVLab/VideoMAEv2-Base`(Hugging Face)를 쓴다. 분류 head는 없다. 입력은 16프레임, 224×224. (다른 모델은 맨 아래 표)
 - **레이어**: 12개 블록 중 7번 블록의 출력 (0번부터 센다).
-- **SAE**: 그 출력으로 학습한 SAE. `--weights_dir`를 안 주면 배포용 SAE인 `weights/sae/videomaev2-base/l7`을 쓴다 (Matryoshka BatchTopK, 768 → 12,288 latent, k = 20).
+- **SAE**: 그 출력으로 학습한 SAE. `--weights_dir`를 안 주면 배포용 SAE인 `weights/sae/videomaev2-vitb-k710distill/l7`을 쓴다 (Matryoshka BatchTopK, 768 → 12,288 latent, k = 20).
 
 어떤 모델·SAE로 뽑은 결과인지는 2번, 3번 명령의 출력과 그림 맨 위에 항상 같이 적힌다.
 
 ## 1. 통계 뽑기 (모델·레이어마다 한 번만, 2~5분)
 
 ```bash
-python scripts/top_activations.py --model videomaev2-base --layer 7 \
+python scripts/top_activations.py --model videomaev2-vitb-k710distill --layer 7 \
     --clips runs/sae_sweep/clips.json --split val4k --data_root runs/sae_sweep/k400_val
 ```
 
@@ -22,16 +22,16 @@ python scripts/top_activations.py --model videomaev2-base --layer 7 \
 ## 2. 볼 latent 번호 고르기
 
 ```bash
-python scripts/show_latent.py --model videomaev2-base --layer 7
+python scripts/show_latent.py --model videomaev2-vitb-k710distill --layer 7
 ```
 
 맨 위 네 줄에 어떤 모델·레이어·SAE인지 나오고, 그 아래 한 클래스에 쏠려 있는 latent 20개가 나온다. 여기서 번호를 고른다.
 
 ```
 model: VideoMAE V2 ViT-B (distilled from the giant fine-tuned on Kinetics-710, head stripped)
-checkpoint: OpenGVLab/VideoMAEv2-Base @ 78c337a   (model ID videomaev2-base)
+checkpoint: OpenGVLab/VideoMAEv2-Base @ 78c337a   (model ID videomaev2-vitb-k710distill)
 layer: output of block 7 of 0-11, 8 x 14 x 14 patches (time x height x width)
-SAE: MatroyshkaBatchTopKSAE, 768 -> 12,288 latents, k = 20, from weights/sae/videomaev2-base/l7
+SAE: MatroyshkaBatchTopKSAE, 768 -> 12,288 latents, k = 20, from weights/sae/videomaev2-vitb-k710distill/l7
 latent  8424:  60% playing chess                  fires on 0.13% of clips
 latent 10340:  41% snorkeling                     fires on 0.43% of clips
 ```
@@ -41,10 +41,10 @@ latent 10340:  41% snorkeling                     fires on 0.43% of clips
 ## 3. 그림 만들기
 
 ```bash
-python scripts/show_latent.py --model videomaev2-base --layer 7 --latent 10340
+python scripts/show_latent.py --model videomaev2-vitb-k710distill --layer 7 --latent 10340
 ```
 
-그림 파일이 생긴다: `results/videomaev2-base/top_activations/l7_latent10340.png`
+그림 파일이 생긴다: `results/videomaev2-vitb-k710distill/top_activations/l7_latent10340.png`
 
 **VS Code 왼쪽 파일 목록에서 이 파일을 클릭하면 그림이 열린다.**
 
@@ -78,12 +78,12 @@ python scripts/show_latent.py --model videomaev2-base --layer 7 --latent 10340
 **내가 학습한 SAE**: 1번에 `--weights_dir`(SAE 위치)와 `--out`(저장할 곳)을 주고, 3번에 같은 `--weights_dir`와 `--top`(1번의 `--out`)을 준다.
 
 ```bash
-python scripts/top_activations.py --model videomaev2-base --layer 7 \
+python scripts/top_activations.py --model videomaev2-vitb-k710distill --layer 7 \
     --weights_dir runs/sae_sweep/weights/btk --out runs/sae_sweep/top/btk.pt \
     --clips runs/sae_sweep/clips.json --split val4k --data_root runs/sae_sweep/k400_val
 
-python scripts/show_latent.py --model videomaev2-base --layer 7 --top runs/sae_sweep/top/btk.pt
-python scripts/show_latent.py --model videomaev2-base --layer 7 --top runs/sae_sweep/top/btk.pt \
+python scripts/show_latent.py --model videomaev2-vitb-k710distill --layer 7 --top runs/sae_sweep/top/btk.pt
+python scripts/show_latent.py --model videomaev2-vitb-k710distill --layer 7 --top runs/sae_sweep/top/btk.pt \
     --weights_dir runs/sae_sweep/weights/btk --latent 123
 ```
 
@@ -108,7 +108,7 @@ python scripts/show_latent.py --model videomaev2-base --layer 7 --top runs/sae_s
 
 | `--model` | 어떤 모델인가 | 체크포인트 (Hugging Face) | `--layer` |
 |---|---|---|---|
-| `videomaev2-base` | VideoMAE V2 ViT-B. Kinetics-710으로 fine-tune한 giant 모델에서 distill한 공식 ViT-B (분류 head 없음) | `OpenGVLab/VideoMAEv2-Base` | 0–11 |
+| `videomaev2-vitb-k710distill` | VideoMAE V2 ViT-B. Kinetics-710으로 fine-tune한 giant 모델에서 distill한 공식 ViT-B (분류 head 없음) | `OpenGVLab/VideoMAEv2-Base` | 0–11 |
 | `vivit-b-16x2-kinetics400` | ViViT-B/16x2. Kinetics-400으로 supervised fine-tune (Google) | `google/vivit-b-16x2-kinetics400` | 0–10 |
 | `vjepa2-vitl-fpc64-256` | V-JEPA 2 ViT-L. Meta의 self-supervised 모델, encoder만 사용 | `facebook/vjepa2-vitl-fpc64-256` | 0–23 |
 | `videoprism-base-f16r288` | VideoPrism-B (16프레임, 288px). Google 공개본의 커뮤니티 PyTorch 포팅 | `sposiboh/videoprism-base-f16r288-pt` | 0–15 |

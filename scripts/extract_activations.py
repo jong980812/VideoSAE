@@ -1,6 +1,6 @@
 """Stage 1: resid_post activations at many layers, in one forward pass.
 
-    python scripts/extract_activations.py --model videomaev2-base --out_dir acts/videomaev2-base
+    python scripts/extract_activations.py --model videomaev2-vitb-k710distill --out_dir acts/videomaev2-vitb-k710distill
 
 (the clips come from K400_TRAIN in .env; --data_root overrides it), or split over GPUs:
 
@@ -66,7 +66,7 @@ The subset is drawn **per clip and shared across layers**: the same token
 positions are kept at every depth, so a row index means the same patch of the
 same clip in every layer's file.
 
-Of the shipped SAEs, only videomaev2-base's were fitted on per-clip picks; the
+Of the shipped SAEs, only videomaev2-vitb-k710distill's were fitted on per-clip picks; the
 other four drew theirs from one sequential stream in clip order. Same
 distribution (256 uniform positions per clip), different rows.
 """

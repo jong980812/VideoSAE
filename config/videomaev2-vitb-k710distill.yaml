@@ -1,6 +1,6 @@
 # VideoMAE V2 ViT-B: the official ViT-B distilled from a giant fine-tuned on
 # Kinetics-710 (head stripped) -- see models/videomaev2.py.
-model_id: videomaev2-base
+model_id: videomaev2-vitb-k710distill
 name: "VideoMAE V2 ViT-B (distilled from the giant fine-tuned on Kinetics-710, head stripped)"
 
 backbone:
@@ -21,7 +21,7 @@ expect:
 # Point it elsewhere to use other weights (e.g. train_sae.py --out_dir my_weights
 # writes my_weights/<model_id>/l<N>/).
 sae:
-  dir: weights/sae/videomaev2-base/l{layer}
+  dir: weights/sae/videomaev2-vitb-k710distill/l{layer}
 
 # One classifier per label space; a dataset config (config/datasets/) names the
 # label space it is scored in (HAT is scored in kinetics400's).
@@ -30,15 +30,15 @@ head:
     type: probe                               # linear map on fc_norm(mean over tokens), fitted
                                               # by train_probe.py, same protocol as the
                                               # VideoPrism / V-JEPA 2 probes: 73.2%
-    path: weights/heads/kinetics400/videomaev2-base.pt
+    path: weights/heads/kinetics400/videomaev2-vitb-k710distill.pt
     sha256: 174c07adac7322bb3ea645785df990e9626290183cb89f7edb6e323e3d8802fe
   nturgbd:
     type: probe
-    path: weights/heads/nturgbd/videomaev2-base.pt    # not fitted yet
+    path: weights/heads/nturgbd/videomaev2-vitb-k710distill.pt    # not fitted yet
     sha256: null
   ssv2:
     type: probe
-    path: weights/heads/ssv2/videomaev2-base.pt       # not fitted yet
+    path: weights/heads/ssv2/videomaev2-vitb-k710distill.pt       # not fitted yet
     sha256: null
 
 extract:                                      # extract_activations.py defaults

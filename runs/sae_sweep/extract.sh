@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Activations for the SAE setting sweep (videomaev2-base), on 8 GPUs:
+# Activations for the SAE setting sweep (videomaev2-vitb-k710distill), on 8 GPUs:
 #   acts/c5k_t256    train5k,  256 tokens/clip, layers 3,7,10   (the shipped recipe's data)
 #   acts/c5k_t1024   train5k, 1024 tokens/clip, layer 7         (4x the rows, same clips)
 #   acts/c20k_t256   train20k, 256 tokens/clip, layers 3,7,10   (4x the rows, 4x the clips)
@@ -10,7 +10,7 @@ cd "$(dirname "$0")/../.."
 
 R=runs/sae_sweep
 PY=.venv/bin/python
-COMMON=(--model videomaev2-base --data_root "$R/k400_train" --clip_list "$R/clips.json" --workers 11)
+COMMON=(--model videomaev2-vitb-k710distill --data_root "$R/k400_train" --clip_list "$R/clips.json" --workers 11)
 mkdir -p "$R/logs"
 
 pids=()

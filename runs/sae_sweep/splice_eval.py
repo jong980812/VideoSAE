@@ -1,4 +1,4 @@
-"""Kinetics-400 accuracy of videomaev2-base with each sweep SAE spliced in, all
+"""Kinetics-400 accuracy of videomaev2-vitb-k710distill with each sweep SAE spliced in, all
 SAEs scored on the same clips in one pass (the splice is evaluate.py's:
 decode(sae.decode(sae.encode(encode(x, layer))), layer), then the kinetics400 head).
 
@@ -28,7 +28,7 @@ from models import get_model                                         # noqa: E40
 from models.heads import build_head                                  # noqa: E402
 from saes import load_sae                                            # noqa: E402
 
-MODEL = "videomaev2-base"
+MODEL = "videomaev2-vitb-k710distill"
 
 
 def sae_runs(names) -> dict:

@@ -1,6 +1,6 @@
 """Fit a Kinetics-400 linear probe on a backbone's frozen features.
 
-    python scripts/train_probe.py --model videomaev2-base
+    python scripts/train_probe.py --model videomaev2-vitb-k710distill
 
 (clips from K400_TRAIN and K400_VAL in .env; --train_root / --val_root override)
 writes weights/heads/kinetics400/<model_id>.pt, the `probe` head evaluate.py scores

@@ -1,7 +1,7 @@
 """Draw what an SAE latent responds to, as a PNG: its top clips with its activation over them.
 
-    python scripts/show_latent.py --model videomaev2-base --layer 7                 # which latents to look at
-    python scripts/show_latent.py --model videomaev2-base --layer 7 --latent 8424   # -> one PNG per latent
+    python scripts/show_latent.py --model videomaev2-vitb-k710distill --layer 7                 # which latents to look at
+    python scripts/show_latent.py --model videomaev2-vitb-k710distill --layer 7 --latent 8424   # -> one PNG per latent
 
 Reads what scripts/top_activations.py wrote (results/<model_id>/top_activations/l<layer>.pt,
 or `--top`). Without `--latent` it lists the latents most tied to one class. With it, it

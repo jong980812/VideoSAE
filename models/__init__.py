@@ -1,7 +1,7 @@
 """Backbone registry: one model ID per backbone *variant*, one YAML file per ID.
 
     from models import get_model
-    model = get_model("videomaev2-base", device="cuda:0")
+    model = get_model("videomaev2-vitb-k710distill", device="cuda:0")
 
 `config/<model_id>.yaml` holds everything about a model: its name, the wrapper class, the
 Hugging Face checkpoint and pinned revision (and, optionally, the clip length to

@@ -14,7 +14,7 @@ python scripts/evaluate.py --model vivit-b-16x2-kinetics400
 ## SAE classification head
 
 ```
-python scripts/train_probe.py --model videomaev2-base
+python scripts/train_probe.py --model videomaev2-vitb-k710distill
 ```
 
 이런 식으로 하면 댐. 근데 classification head는 이미 다 트레이닝 했으니까 왠만하면 그대로 나두는 게 좋을듯함.  

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Layer-7 activations of videomaev2-base for the Matryoshka vs BatchTopK comparison:
+# Layer-7 activations of videomaev2-vitb-k710distill for the Matryoshka vs BatchTopK comparison:
 # the train split over 4 GPUs (then merged) and the held-out split on a fifth.
 #   bash runs/mat_vs_btk/extract.sh
 set -uo pipefail
@@ -7,7 +7,7 @@ cd "$(dirname "$0")/../.."
 
 R=runs/mat_vs_btk
 PY=.venv/bin/python
-COMMON=(--model videomaev2-base --data_root "$R/k400_train" --clip_list "$R/clips.json"
+COMMON=(--model videomaev2-vitb-k710distill --data_root "$R/k400_train" --clip_list "$R/clips.json"
         --layers 7 --workers 16)
 mkdir -p "$R/logs"
 

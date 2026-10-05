@@ -6,7 +6,7 @@
 
 Every run is scripts/train_sae.py with the shipped recipe (Matryoshka BatchTopK,
 k=20, 16x, 20k steps, lr 'paper', train5k x 256 tokens, layer 7) except for the
-fields its entry in RUNS overrides. A run lands in weights/<name>/videomaev2-base/l<layer>/
+fields its entry in RUNS overrides. A run lands in weights/<name>/videomaev2-vitb-k710distill/l<layer>/
 with metrics.json from the held-out activations; finished runs are skipped.
 """
 
@@ -18,7 +18,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 RUN = Path(__file__).resolve().parent
-MODEL = "videomaev2-base"
+MODEL = "videomaev2-vitb-k710distill"
 
 BASE = dict(data="c5k_t256", layer=7, sae="matroyshka_batch_top_k", k=20, x=16,
             steps=20_000, lr="paper", fractions=None)

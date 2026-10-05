@@ -1,6 +1,6 @@
 """Stage 2: train one sparse autoencoder on one layer's activation shards.
 
-    python scripts/train_sae.py --activations_dir acts/videomaev2-base/l9 --out_dir my_weights
+    python scripts/train_sae.py --activations_dir acts/videomaev2-vitb-k710distill/l9 --out_dir my_weights
 
 writes `my_weights/<model_id>/l<layer>/{ae.pt, config.json}` -- the same layout
 as the shipped `weights/sae/`, so `saes.load_sae(..., weights_dir="my_weights")`

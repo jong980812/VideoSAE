@@ -10,7 +10,7 @@ too. `AutoModel` returns a thin `VideoMAEv2` PreTrainedModel whose `.model` is a
 timm-style VisionTransformer -- `blocks`, `fc_norm`, `head` -- and that is what
 `encode`/`decode` run.
 
-`videomaev2-base` (the ID the shipped SAEs were trained on) IS SUPERVISED,
+`videomaev2-vitb-k710distill` (the ID the shipped SAEs were trained on) IS SUPERVISED,
 whatever the model card says. The card for `OpenGVLab/VideoMAEv2-Base` calls the model
 self-supervised (800 epochs on UnlabeledHybrid-1M), but outside the blocks the
 weights hold only the patch embedding and a TRAINED `fc_norm` (weight mean 0.52,

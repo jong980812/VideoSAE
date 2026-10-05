@@ -5,7 +5,7 @@
 #
 #   bash scripts/train_all_layers.sh <model_id> <work_dir> [group_size]
 #
-#   e.g. bash scripts/train_all_layers.sh videomaev2-base /scratch/sae 6
+#   e.g. bash scripts/train_all_layers.sh videomaev2-vitb-k710distill /scratch/sae 6
 #
 # The clips come from K400_TRAIN in .env (an environment variable of that name
 # overrides it). SAEs land in <work_dir>/weights/<model_id>/l<N>/{ae.pt,config.json}.
