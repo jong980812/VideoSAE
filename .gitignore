@@ -15,4 +15,5 @@ runs/*/logs/
 runs/**/*.pt
 results/**/*.pt
 results/**/*_latent*.png
+results/**/*_list.txt
 runs/*/top/
